@@ -390,13 +390,13 @@
     { url: 'https://mysadaqah.org.uk/contact-us', form: true },
     { url: 'https://thequraanacademy.com/', form: true },
     { url: 'https://palmglobalacademy.com/', form: true, note: 'Only the SMTP password is missing' },
-    { url: 'https://dsapak.com/contact/', form: false },
-    { url: 'https://deenies.org/get-involved', form: false },
-    { url: 'https://epicwritings.com/contact/', form: false },
-    { url: 'https://hajjandumrahguide.com/contact-us', form: false },
+    { url: 'https://dsapak.com/contact/', form: true },
+    { url: 'https://deenies.org/get-involved', form: true },
+    { url: 'https://epicwritings.com/contact/', form: true },
+    { url: 'https://hajjandumrahguide.com/contact-us', form: true },
     { url: 'https://latifworx.com/contact/', form: true },
     { url: 'https://mercdev.co.uk/contact', form: true },
-    { url: 'https://senseible.com/contact/', form: false, platform: 'WordPress project', decision: true },
+    { url: 'https://senseible.com/contact/', form: true, platform: 'WordPress project', decision: true },
     { url: 'https://sedara.co.uk/', form: true }
   ].map(site => ({ ...site, host: new URL(site.url).hostname, path: new URL(site.url).pathname }));
 
@@ -412,6 +412,7 @@
     ['delivery', 'Delivery working']
   ];
   const STORAGE_KEY = 'email-config-checklist.v1';
+  const SEED_VERSION = 2;
 
   const $ = id => document.getElementById(id);
   const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -420,7 +421,7 @@
   function startingState() {
     const sites = {};
     SITES.forEach(s => { sites[s.host] = { form: s.form, smtp: false, delivery: false }; });
-    return { sites, nodejs: null };
+    return { version: SEED_VERSION, sites, nodejs: null };
   }
 
   function load() {
@@ -430,6 +431,9 @@
       if (saved) {
         SITES.forEach(s => Object.assign(fresh.sites[s.host], saved.sites && saved.sites[s.host]));
         fresh.nodejs = saved.nodejs === 'yes' || saved.nodejs === 'no' ? saved.nodejs : null;
+        // Ticks saved before the list last changed keep their SMTP and delivery
+        // progress but pick up the new form status.
+        if (saved.version !== SEED_VERSION) SITES.forEach(s => { fresh.sites[s.host].form = s.form; });
       }
     } catch (e) { /* storage blocked or corrupt: start from the list */ }
     return fresh;
